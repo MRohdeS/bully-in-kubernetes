@@ -167,7 +167,7 @@ async def receive_coordinator(request):
     #Send coordinator message to all pods with lower id
     isValid = True
     for pod_id in pod_values:
-        if(pod_id <= selected_id):
+        if(pod_id < selected_id):
             #Send coordinator to new pod with lower id
             print("Pod: {0} New leader Is: {1}".format(pod_id, selected_id))
         else:
