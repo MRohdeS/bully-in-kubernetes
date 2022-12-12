@@ -46,7 +46,7 @@ async def run_bully():
         for pod_ip in ip_list:
             endpoint = '/pod_id'
             url = 'http://' + str(pod_ip) + ':' + str(WEB_PORT) + endpoint
-            
+        
             try:
                 response = requests.get(url)
                 print("\n 5. Got response from: %s,  %s" % (url, response))
@@ -125,7 +125,7 @@ async def receive_answer(request):
             await receive_election(pod_id)
         else:
             #Continue to next pod in list
-            pass
+            continue
     
     if(isValid):
         #Tell pod that sent election that it is the coordinator
@@ -172,7 +172,7 @@ async def receive_coordinator(request):
             print("Pod: {0} New leader Is: {1}".format(pod_id, selected_id))
         else:
             #Continue to next pod in list
-            print("ERROR: No leader was found")
+            print("ERROR: No leader was found", pod_id)
             isValid = False
     if(isValid):
         v1.patch_namespaced_pod(selected_id, "default", {"metadata": {"labels": {"leader": "true"}}})

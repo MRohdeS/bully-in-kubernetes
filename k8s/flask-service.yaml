@@ -6,7 +6,7 @@ spec:
   type: NodePort
   selector:
     app: bully-app
-    leader: "true"
+    leader: "false"
   ports:
     - protocol: TCP
       port: 5000
