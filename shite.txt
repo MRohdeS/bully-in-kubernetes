@@ -1,0 +1,50 @@
+#Get dictionary of pods_id's in kubenetes network
+    list_of_pods = dict()
+    for pod_ip in ip_list:
+
+        #Get pod id of pod_ip
+        endpoint = '/pod_id'
+        url = 'http://' + str(POD_IP) + ':' + str(WEB_PORT) + endpoint
+        response = requests.get(url)
+        pod_id = response.json()
+    
+        #Send election to all pods and get answers: OK or not OK
+        receive_answer_pod_id = receive_answer(pod_ip)
+
+        list_of_pods[str(pod_ip)] = receive_answer_pod_id
+    
+
+    #Create dictionary of pods that replied OK
+    OK_pods = dict()
+
+    for pod_msg in list_of_pods:
+        #Check pod_ip msg for OK
+        if(pod_msg == True):
+            #add pod_ip to dictionary of with ok pods
+            OK_pods[str(pod_ip)] = list_of_pods[pod_msg]
+        else:
+            print("I am the coordinator")
+            endpoint = '/receive_coordinator'
+            url = 'http://' + str(pod_ip) + ':' + str(WEB_PORT) + endpoint
+            msg = {'Coordinator': POD_ID}
+            response = requests.post(url, json=msg)
+
+    
+    #Choose new leader from ok_pods with highest id
+    if max(OK_pods.values()):
+        print("I am the leader")
+        endpoint = '/receive_coordinator'
+        url = 'http://' + str(pod_ip) + ':' + str(WEB_PORT) + endpoint
+        msg = {'Coordinator': POD_ID}
+        response = requests.post(url, json=msg)
+    else:
+        print("I am not the coordinator")
+
+
+    #Ask all known pods for their id using recieve answer and post
+
+   
+    
+    
+    #if(max(list_of_pods.values())):
+    #    print("I am the coordinator")

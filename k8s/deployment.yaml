@@ -29,3 +29,18 @@ spec:
             - containerPort: 8080
               name: http
               protocol: TCP
+
+        - name: flask-web-container
+          image: flask-web-app
+          imagePullPolicy: Never
+          ports:
+            - containerPort: 5000
+              name: http
+              protocol: TCP
+          
+              
+             
+
+
+        
+       

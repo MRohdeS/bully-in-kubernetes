@@ -1,14 +1,17 @@
 import asyncio
+import os
 from aiohttp import web
 import os
 import socket
 import random
 import aiohttp
 import requests
+import json
 
 POD_IP = str(os.environ['POD_IP'])
 WEB_PORT = int(os.environ['WEB_PORT'])
 POD_ID = random.randint(0, 100)
+ip_list = []
 
 async def setup_k8s():
     # If you need to do setup of Kubernetes, i.e. if using Kubernetes Python client
@@ -20,7 +23,6 @@ async def run_bully():
         await asyncio.sleep(5) # wait for everything to be up
         
         # Get all pods doing bully
-        ip_list = []
         print("Making a DNS lookup to service")
         response = socket.getaddrinfo("bully-service",0,0,0,0)
         print("Get response from DNS")
@@ -52,16 +54,85 @@ async def pod_id(request):
     return web.json_response(POD_ID)
     
 #POST /receive_answer
+#Receive answer from other pod with higher id
 async def receive_answer(request):
-    pass
+    print("Received answer")
+    #get pod ip of sender of election
+    #selected_id = request.json()
+    selected_id = pod_id(request)
+
+    #Get dictionary of pods_id's in kubenetes network
+    list_of_pods = dict()
+    for pod_ip in ip_list:
+        #Get pod id of pod_ip
+        endpoint = '/pod_id'
+        url = 'http://' + str(POD_IP) + ':' + str(WEB_PORT) + endpoint
+        response = requests.get(url)
+        pod_id = response.json()
+        list_of_pods[str(pod_ip)] = pod_id
+
+    isValid = True
+    #compare pod id with own pod id
+    for pod_id in list_of_pods:
+        if(pod_id > selected_id):
+            #Send election to new pod with higher id
+            print("New election called for: ", pod_id)
+            isValid = False
+            receive_election(pod_id)
+        else:
+            #Continue to next pod in list
+            pass
+    
+    if(isValid):
+        #Tell pod that sent election that it is the coordinator
+        print("I am the coordinator")
+        receive_coordinator(pod_id)
+    
+            
+    
+    #print("I am the coordinator")
+    #receive_coordinator(pod_id)
 
 #POST /receive_election
+#Receive election from other pod with lower id
 async def receive_election(request):
-    pass
+    #Get pod ip of sender of election
+    selected_id = pod_id(request)
+    print("Received election for: ", selected_id)
+    
+    #get pod ip of sender of election
+    receive_answer(selected_id)
+        
 
 #POST /receive_coordinator
+#Receive coordinator from other pod with higher id
 async def receive_coordinator(request):
-    pass
+    selected_id = pod_id(request)
+    print(f"Received coordinator from pod {selected_id['Coordinator']}")
+
+    #Get dictionary of pods_id's in kubenetes network
+    list_of_pods = dict()
+    for pod_ip in ip_list:
+        #Get pod id of pod_ip
+        endpoint = '/pod_id'
+        url = 'http://' + str(POD_IP) + ':' + str(WEB_PORT) + endpoint
+        response = requests.get(url)
+        pod_id = response.json()
+        list_of_pods[str(pod_ip)] = pod_id
+
+    #Send coordinator message to all pods with lower id
+    isValid = True
+    for pod_id in list_of_pods:
+        if(pod_id < selected_id):
+            #Send coordinator to new pod with lower id
+            print("New leader Is: ", pod_id)
+        else:
+            #Continue to next pod in list
+            print("ERROR: No leader was found")
+            isValid = False
+    if(isValid):
+        POD_IP = selected_id
+    
 
 async def background_tasks(app):
     task = asyncio.create_task(run_bully())
