@@ -48,3 +48,14 @@
     
     #if(max(list_of_pods.values())):
     #    print("I am the coordinator")
+
+
+
+
+        #pods = v1.list_namespaced_pod("default", watch=False)
+
+        #for i in pods.items:
+        #    if i.status.pod_ip == POD_IP:
+        #        continue
+        #    print(i.status.pod_ip)
+        #    ip_list.append(i.status.pod_ip)
