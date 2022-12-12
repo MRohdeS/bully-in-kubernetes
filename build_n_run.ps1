@@ -29,6 +29,8 @@ minikube kubectl get all
 #minikube service --all
 
 #Yeet out the logs
+#minikube kubectl -- logs -l app=bully-app -c bully-container 
+
 #minikube kubectl -- logs -l bully-app
 
 #Write-Host "------------------ View kubernetes active pods ------------------"
