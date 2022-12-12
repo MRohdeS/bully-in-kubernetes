@@ -6,7 +6,7 @@ spec:
   selector:
     matchLabels:
       app: bully-app
-  replicas: 2
+  replicas: 3
   template:
     metadata:
       name: bully-app
@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: bully-container
-          image: bully-app
+          image: bully-app:latest
           imagePullPolicy: Never
           env:
             - name: WEB_PORT
@@ -31,12 +31,10 @@ spec:
               protocol: TCP
 
         - name: flask-web-container
-          image: flask-web-app
+          image: flask-web-app:latest
           imagePullPolicy: Never
           ports:
             - containerPort: 5000
-              name: http
-              protocol: TCP
           
               
              

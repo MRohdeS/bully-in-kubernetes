@@ -18,13 +18,15 @@ Set-Location ..
 
 minikube kubectl -- apply -f .\k8s\flask-service.yaml
 minikube kubectl -- apply -f .\k8s\headless-service.yaml
+minikube kubectl -- apply -f .\k8s\ClusterRole.yaml
+minikube kubectl -- apply -f .\k8s\ClusterRoleBinding.yaml
 minikube kubectl -- apply -f .\k8s\deployment.yaml
 
 Write-Host "------------------ View Kubernetes information ------------------"
 minikube kubectl get all
 
-Write-Host "------------------ View Kubernetes service URLs ------------------"
-minikube service --all
+#Write-Host "------------------ View Kubernetes service URLs ------------------"
+#minikube service --all
 
 #Yeet out the logs
 #minikube kubectl -- logs -l bully-app

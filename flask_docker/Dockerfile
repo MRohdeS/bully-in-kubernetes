@@ -19,12 +19,12 @@ RUN pip install --upgrade pip
 # Copy all to current dir
 COPY . .
 
-# Expose port 8080 for webapp due to flask
-#EXPOSE 5000
+#Expose port 5000 for webapp due to flask
+EXPOSE 5000
 
 # This will print python logs to output
 ENV PYTHONUNBUFFERED=1
 ENV PYTHONIOENCODING=UTF-8
 
 # Define the command to be run when launching the container
-CMD ["python", "-u", "./web_app.py"]
+CMD ["python", "./web_app.py"]
