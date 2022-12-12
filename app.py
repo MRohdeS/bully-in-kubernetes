@@ -1,22 +1,26 @@
 import asyncio
 import os
-from aiohttp import web
 import os
 import socket
 import random
 import aiohttp
 import requests
 import json
+from aiohttp import web
+from kubernetes import config, client
+from kubernetes.client.api import core_v1_api
 
 POD_IP = str(os.environ['POD_IP'])
 WEB_PORT = int(os.environ['WEB_PORT'])
 POD_ID = random.randint(0, 100)
-ip_list = []
+v1 = core_v1_api.CoreV1Api()
 
 async def setup_k8s():
     # If you need to do setup of Kubernetes, i.e. if using Kubernetes Python client
-	print("K8S setup completed")
- 
+    config.load_incluster_config()
+    print("K8S setup completed")
+
+
 async def run_bully():
     while True:
         print("Running bully")
@@ -25,13 +29,25 @@ async def run_bully():
         # Get all pods doing bully
         print("Making a DNS lookup to service")
         response = socket.getaddrinfo("bully-service",0,0,0,0)
-        print("Get response from DNS")
-        for result in response:
-            ip_list.append(result[-1][0])
-        ip_list = list(set(ip_list))
+        #pods = v1.list_namespaced_pod("default", watch=False)
+
+        #for i in pods.items:
+        #    if i.status.pod_ip == POD_IP:
+        #        continue
+        #    print(i.status.pod_ip)
+        #    ip_list.append(i.status.pod_ip)
         
-        # Remove own POD ip from the list of pods
-        ip_list.remove(POD_IP)
+        print("Get response from DNS")
+        #print(response)
+        ip_list = []
+        for result in response:
+            print(result[-1][0])
+            ip_list.append(result[-1][0])
+        #print(ip_list)
+        ip_list = list(set(ip_list))
+
+        #Remove own POD ip from the list of pods
+        #ip_list.remove(POD_IP)
         print("Got %d other pod ip's" % (len(ip_list)))
         
         # Get ID's of other pods by sending a GET request to them
@@ -40,9 +56,16 @@ async def run_bully():
         for pod_ip in ip_list:
             endpoint = '/pod_id'
             url = 'http://' + str(pod_ip) + ':' + str(WEB_PORT) + endpoint
-            response = requests.get(url)
+            
+            try:
+                response = requests.get(url)
+            except:
+                print("Could not connect to pod %s" % (pod_ip))
+                continue
+
             other_pods[str(pod_ip)] = response.json()
             
+
         # Other pods in network
         print(other_pods)
         
@@ -131,7 +154,7 @@ async def receive_coordinator(request):
             print("ERROR: No leader was found")
             isValid = False
     if(isValid):
-        POD_IP = selected_id
+        v1.patch_namespaced_pod(selected_id, "default", {"metadata": {"labels": {"leader": "true"}}})
     
 
 async def background_tasks(app):
